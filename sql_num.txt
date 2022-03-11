@@ -1,0 +1,1 @@
+iif({Поступления_-_ВСЕГО}<>SQL_NUM('select t1.at_3160 from ks_ddlcontrol.ds_1033_3213 t1 where t1.id='+{id}),'Изменилось', 'Не изменилось')

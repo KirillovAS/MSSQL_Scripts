@@ -1,0 +1,57 @@
+--create view _structura_gp
+--as
+select
+--count(*)
+--top 100
+cs_grid.id as cs_grid_id
+,cs.cs_id
+,cs.cs_code
+,cs.cs_name
+,merop_grid.id as merop_grid_id
+,merop.merop_code
+,merop.merop_name
+,progr_grid.id as progr_grid_id
+,progr.progr_code
+,progr.progr_name
+,progr.progr_upper_code
+,progr_lvl2.progr_code as progr_lvl2_code
+,progr_lvl2.progr_name as progr_lvl2_name
+,progr_lvl2.progr_upper_code as progr_lvl2_upper_code
+,progr_lvl3.progr_code as progr_lvl3_code
+,progr_lvl3.progr_name as progr_lvl3_name
+,progr_lvl3.progr_upper_code as progr_lvl3_upper_code
+from ks_ddlcontrol.ds_4074_5903 cs_grid
+inner join
+	(select t1.id as cs_id, t1.at_5881 as cs_code, t2.at_8457 as cs_name, t2.at_8458 as cs_name_max_date from ks_ddlcontrol.cl_4086_8662 t2 
+	inner join ks_ddlcontrol.cl_4086_5891 t1 on t1.id=t2.id_up
+	inner join (select t1.id, max(at_8458) as max_date 
+	from ks_ddlcontrol.cl_4086_8662 t2 inner join ks_ddlcontrol.cl_4086_5891 t1 on t1.id=t2.id_up
+	group by t1.id) md on t1.id=md.id and isnull(t2.at_8458,0)=isnull(md.max_date,0)) cs on cs_grid.cl_5891=cs.cs_id
+inner join ks_ddlcontrol.ds_4074_5845 merop_grid on cs_grid.id_up=merop_grid.id
+inner join 
+	(select t1.id as merop_id, t1.at_5840 as merop_code, t2.at_5841 as merop_name, t2.at_8468 as merop_name_max_date from ks_ddlcontrol.cl_4083_8677 t2 
+	inner join ks_ddlcontrol.cl_4083_5846 t1 on t1.id=t2.id_up
+	inner join (select t1.id, max(at_8468) as max_date 
+	from ks_ddlcontrol.cl_4083_8677 t2 inner join ks_ddlcontrol.cl_4083_5846 t1 on t1.id=t2.id_up
+	group by t1.id) md on t1.id=md.id and isnull(t2.at_8468,0)=isnull(md.max_date,0)) merop on merop_grid.cl_5850=merop.merop_id
+inner join ks_ddlcontrol.ds_4074_5775 progr_grid on merop_grid.id_up=progr_grid.id
+inner join 
+	(select t1.id as progr_id, t1.at_5763 as progr_code, t2.at_5764 as progr_name, t1.at_5765 as progr_upper_code, t2.at_8466 as progr_name_max_date from ks_ddlcontrol.cl_4073_8674 t2 
+	inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	inner join (select t1.id, max(at_8466) as max_date 
+	from ks_ddlcontrol.cl_4073_8674 t2 inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	group by t1.id) md on t1.id=md.id and isnull(t2.at_8466,0)=isnull(md.max_date,0)) progr on progr_grid.cl_5814=progr.progr_id
+inner join 
+	(select distinct t1.at_5763 as progr_code, t2.at_5764 as progr_name, t1.at_5765 as progr_upper_code, t2.at_8466 as progr_name_max_date from ks_ddlcontrol.cl_4073_8674 t2 
+	inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	inner join (select t1.id, max(at_8466) as max_date 
+	from ks_ddlcontrol.cl_4073_8674 t2 inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	group by t1.id) md on t1.id=md.id and isnull(t2.at_8466,0)=isnull(md.max_date,0) and t1.cl_5767=17) progr_lvl2 on progr.progr_upper_code=progr_lvl2.progr_code
+inner join 
+	(select distinct t1.at_5763 as progr_code, t2.at_5764 as progr_name, t1.at_5765 as progr_upper_code, t2.at_8466 as progr_name_max_date from ks_ddlcontrol.cl_4073_8674 t2 
+	inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	inner join (select t1.id, max(at_8466) as max_date 
+	from ks_ddlcontrol.cl_4073_8674 t2 inner join ks_ddlcontrol.cl_4073_5761 t1 on t1.id=t2.id_up
+	group by t1.id) md on t1.id=md.id and isnull(t2.at_8466,0)=isnull(md.max_date,0) and t1.cl_5767=17) progr_lvl3 on progr_lvl2.progr_upper_code=progr_lvl3.progr_code
+
+where cs.cs_code<>'0000000000'

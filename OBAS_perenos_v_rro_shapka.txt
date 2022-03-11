@@ -1,0 +1,127 @@
+create proc [ks_ddlcontrol].[_2020_OBAS_perenos_v_rro_shapka]
+-- Данные сажаются в РРО только на первую версию,
+-- если документ с такой шапкой в РРО есть, то данные добавляются в него (не заменяются)
+-- если данная комбинация рп+подраздел есть в документе, то по ней суммы не обновляются
+
+as
+begin
+	set nocount on
+declare 
+@period_god int,
+@ver_id int
+
+set @period_god=2019
+set @ver_id=1
+
+select 
+t1.cl_3520 as period_id, 
+t2.at_2557 as period_god,
+t1.cl_3564 as obas_id,
+t1.cl_3516 as bud_id, 
+t1.cl_3518 as ver_id, 
+t1.cl_3517 as ved_id, 
+t1.cl_3521 as podr_id,
+t1.cl_3527 as if_id,
+t3.at_2520 as if_name,
+t1.cl_3528 as rp_id,
+t1.m_3541 as summa_ochg,
+t1.m_3542 as summa_pl1,
+t1.m_3543 as summa_pl2
+into #obas_1
+from ks_ddlcontrol.ds_1056_3668 t1
+left join ks_ddlcontrol.cl_945_2548 t2 on t1.cl_3520=t2.id -- Справочник Период
+left join ks_ddlcontrol.cl_940_2504 t3 on t1.cl_3527=t3.id -- Справочник ИФ
+--select * from #obas_1
+
+select  * into #obas_2 from #obas_1
+where summa_ochg>0 or summa_pl1>0 or summa_pl2>0
+--select * from #obas_2
+
+select 
+t1.*, 
+case when t1.if_name='ФЕД' then summa_ochg else 0 end as summa_ochg_fed,
+case when t1.if_name='ФЕД' then summa_pl1 else 0 end as summa_pl1_fed,
+case when t1.if_name='ФЕД' then summa_pl2 else 0 end as summa_pl2_fed,
+case when t1.if_name='РЕГ' then summa_ochg else 0 end as summa_ochg_reg,
+case when t1.if_name='РЕГ' then summa_pl1 else 0 end as summa_pl1_reg,
+case when t1.if_name='РЕГ' then summa_pl2 else 0 end as summa_pl2_reg,
+case when t1.if_name='МЕСТ' then summa_ochg else 0 end as summa_ochg_mest,
+case when t1.if_name='МЕСТ' then summa_pl1 else 0 end as summa_pl1_mest,
+case when t1.if_name='МЕСТ' then summa_pl2 else 0 end as summa_pl2_mest,
+case when t1.if_name='ВНБ' then summa_ochg else 0 end as summa_ochg_vnb,
+case when t1.if_name='ВНБ' then summa_pl1 else 0 end as summa_pl1_vnb,
+case when t1.if_name='ВНБ' then summa_pl2 else 0 end as summa_pl2_vnb
+into #obas_sborka_1
+from #obas_2 t1
+where t1.period_god=@period_god and t1.ver_id=@ver_id
+--select * from #obas_sborka_1
+
+select 
+period_id, 
+period_god,
+bud_id, 
+ver_id, 
+ved_id, 
+podr_id,
+rp_id,
+sum(summa_ochg_fed) summa_ochg_fed,
+sum(summa_ochg_reg) summa_ochg_reg,
+sum(summa_ochg_mest) summa_ochg_mest,
+sum(summa_ochg_vnb) summa_ochg_vnb,
+sum(summa_pl1_fed) summa_pl1_fed,
+sum(summa_pl1_reg) summa_pl1_reg,
+sum(summa_pl1_mest) summa_pl1_mest,
+sum(summa_pl1_vnb) summa_pl1_vnb,
+sum(summa_pl2_fed) summa_pl2_fed,
+sum(summa_pl2_reg) summa_pl2_reg,
+sum(summa_pl2_mest) summa_pl2_mest,
+sum(summa_pl2_vnb) summa_pl2_vnb
+into #obas_sborka_2
+from #obas_sborka_1
+group by
+period_id,
+period_god,
+bud_id,
+ver_id,
+ved_id,
+podr_id,
+rp_id
+--select * from #obas_sborka_2
+
+insert into ks_ddlcontrol.ds_1139_5083 (documentid, cl_4880, cl_4836, cl_4837, cl_4838)
+select distinct 
+438, 
+period_id, 
+bud_id, 
+ved_id, 
+1
+from #obas_sborka_2 t1
+left join ks_ddlcontrol.ds_1139_5083 t2
+on t1.period_id=t2.cl_4880 and t1.bud_id=t2.cl_4836 and t1.ved_id=t2.cl_4837
+where t2.id is null
+
+insert into ks_ddlcontrol.ds_1139_5090 (id_up, cl_4841, cl_4842, at_4905, at_4906, at_4908, at_4909, at_4911, at_4912, at_4913, at_4914, at_4916, at_4917, at_4918, at_4919)
+select
+t2.id,
+t1.podr_id,
+t1.rp_id,
+summa_ochg_fed,
+summa_ochg_reg,
+summa_ochg_mest,
+summa_ochg_vnb,
+summa_pl1_fed,
+summa_pl1_reg,
+summa_pl1_mest,
+summa_pl1_vnb,
+summa_pl2_fed,
+summa_pl2_reg,
+summa_pl2_mest,
+summa_pl2_vnb
+from #obas_sborka_2 t1
+inner join ks_ddlcontrol.ds_1139_5083 t2
+on t1.period_id=t2.cl_4880 and t1.bud_id=t2.cl_4836 and t1.ved_id=t2.cl_4837 and t2.cl_4838=1
+left join ks_ddlcontrol.ds_1139_5090 t3
+on t2.id=t3.id_up and isnull(t1.podr_id,0)=isnull(t3.cl_4841,0) and isnull(t1.rp_id,0)=isnull(t3.cl_4842,0)
+where t3.id is null
+
+end

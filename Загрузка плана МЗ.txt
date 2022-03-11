@@ -1,0 +1,71 @@
+CREATE proc [dbo].[_mz_fact_load]
+ @nmode int=0
+,@uRid UNIQUEIDENTIFIER
+--Первый вариант Александр Левин, данный вариант - Кириллов А.С.
+AS
+begin
+declare @docid_fact int
+--select top 1 @docid_fact=linkdoc from sys_bpms_docs where rid=@uRid
+--select [INT] as docid into #docid from dbo.sys_values where rid=@uRid and CODE  = 'ElementId'
+select top 1 @docid_fact=int from dbo.sys_values where rid=@uRid and CODE  = 'ElementId'
+--set @docid_fact=4
+
+
+--выясняем последний документ госзадания для нашего документа по вводу фактов
+declare @docid_plan int
+set @docid_plan=(
+select top 1 t1.id from ks_ddlcontrol.ds_985_2765 t1 
+inner join ks_ddlcontrol.ds_1165_5588 t2
+on t1.cl_2910=t2.cl_5385 and t1.cl_2812=t2.cl_5343 and t1.cl_2746=t2.cl_5331 and t1.cl_2829=t2.cl_5359 and cl_5329=(select max(t1.cl_5329) 
+from ks_ddlcontrol.ds_985_2765 t1 inner join ks_ddlcontrol.ds_1165_5588 t2
+on t1.cl_2910=t2.cl_5385 and t1.cl_2812=t2.cl_5343 and t1.cl_2746=t2.cl_5331 and t1.cl_2829=t2.cl_5359 where t1.cl_2748=14)
+where t2.id=@docid_fact)
+
+--select @docid_plan
+--return
+
+--заполняем грид с услугами
+insert into ks_ddlcontrol.ds_1165_5591 (id_up, cl_5337)
+select @docid_fact, t1.cl_2769 from ks_ddlcontrol.ds_985_2772 t1 
+where t1.id_up=@docid_plan and t1.cl_2769 not in (select cl_5337 from ks_ddlcontrol.ds_1165_5591 where id_up=@docid_fact)
+
+
+--заполняем грид с РН
+insert into ks_ddlcontrol.ds_1165_5593 (id_up, cl_5336)
+select t3.id, t1.cl_2768 from ks_ddlcontrol.ds_985_2848 t1 
+inner join ks_ddlcontrol.ds_985_2772 t2 on t1.id_up=t2.id and t2.id_up=@docid_plan
+inner join ks_ddlcontrol.ds_1165_5591 t3 on t2.cl_2769=t3.cl_5337 and t3.id_up=@docid_fact
+where t2.cl_2769+'-'+t1.cl_2768 not in (select t2.cl_5337+'-'+t1.cl_5336 from ks_ddlcontrol.ds_1165_5593 t1 inner join ks_ddlcontrol.ds_1165_5591 t2 on t1.id_up=t2.id where t2.id_up=@docid_fact)
+
+
+--заполняем грид с пок-ми качества
+insert into ks_ddlcontrol.ds_1165_5599 (id_up, cl_5340,  at_5360, at_5367, at_5368, at_5402, at_5403)
+select fact_rn.id, plan_kach.cl_2782, plan_kach.at_2830, plan_kach.at_2837, plan_kach.at_2838, plan_kach.at_5309, plan_kach.at_5310 
+from ks_ddlcontrol.ds_985_2802 plan_kach
+inner join ks_ddlcontrol.ds_985_2848 plan_rn on plan_kach.id_up=plan_rn.id and plan_kach.cl_2782 is not null
+inner join ks_ddlcontrol.ds_985_2772 plan_usl on plan_rn.id_up=plan_usl.id and plan_usl.id_up=@docid_plan
+inner join ks_ddlcontrol.ds_1165_5593 fact_rn on plan_rn.cl_2768=fact_rn.cl_5336
+inner join ks_ddlcontrol.ds_1165_5591 fact_usl on fact_rn.id_up=fact_usl.id and plan_usl.cl_2769=fact_usl.cl_5337 and fact_usl.id_up=@docid_fact
+where convert(varchar,plan_usl.cl_2769)+'-'+convert(varchar,plan_rn.cl_2768)+'-'+convert(varchar,plan_kach.cl_2782) 
+not in (select convert(varchar,fact_usl.cl_5337)+'-'+convert(varchar,fact_rn.cl_5336)+'-'+convert(varchar,fact_kach.cl_5340) 
+from ks_ddlcontrol.ds_1165_5599 fact_kach 
+inner join ks_ddlcontrol.ds_1165_5593 fact_rn on fact_kach.id_up=fact_rn.id
+inner join ks_ddlcontrol.ds_1165_5591 fact_usl on fact_rn.id_up=fact_usl.id and fact_usl.id_up=@docid_fact)
+
+
+--заполняем грид с пок-ми объема
+insert into ks_ddlcontrol.ds_1165_5608 (id_up, cl_5341, cl_5407,  at_5361, at_5365, at_5366, at_5404, at_5405)
+select fact_rn.id, plan_obm.cl_2786, plan_obm.cl_5317, plan_obm.at_2831, plan_obm.at_2835, plan_obm.at_2836, plan_obm.at_5311, plan_obm.at_5312 
+from ks_ddlcontrol.ds_985_2808 plan_obm
+inner join ks_ddlcontrol.ds_985_2848 plan_rn on plan_obm.id_up=plan_rn.id and plan_obm.cl_2786 is not null
+inner join ks_ddlcontrol.ds_985_2772 plan_usl on plan_rn.id_up=plan_usl.id and plan_usl.id_up=@docid_plan
+inner join ks_ddlcontrol.ds_1165_5593 fact_rn on plan_rn.cl_2768=fact_rn.cl_5336
+inner join ks_ddlcontrol.ds_1165_5591 fact_usl on fact_rn.id_up=fact_usl.id and plan_usl.cl_2769=fact_usl.cl_5337 and fact_usl.id_up=@docid_fact
+where convert(varchar,plan_usl.cl_2769)+'-'+convert(varchar,plan_rn.cl_2768)+'-'+convert(varchar,plan_obm.cl_2786) 
+not in (select convert(varchar,fact_usl.cl_5337)+'-'+convert(varchar,fact_rn.cl_5336)+'-'+convert(varchar,fact_obm.cl_5341) 
+from ks_ddlcontrol.ds_1165_5608 fact_obm 
+inner join ks_ddlcontrol.ds_1165_5593 fact_rn on fact_obm.id_up=fact_rn.id
+inner join ks_ddlcontrol.ds_1165_5591 fact_usl on fact_rn.id_up=fact_usl.id and fact_usl.id_up=@docid_fact)
+
+
+end

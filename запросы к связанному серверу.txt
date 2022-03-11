@@ -1,0 +1,2 @@
+exec('select top 100 * from ks_ddlcontrol.cl_4086_5891') at MINEK
+select * from openquery(MINEK,'select top 100 * from ks_ddlcontrol.cl_4086_5891')

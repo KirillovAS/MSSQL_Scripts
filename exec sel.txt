@@ -1,0 +1,12 @@
+alter procedure [dbo].[_test1]
+@part1 varchar(max)=''
+as
+begin
+declare @sel varchar(max)
+
+SELECT @sel = 'select ''' + @part1 + ''''
+exec (@sel)
+end
+
+--[dbo].[_test1]
+@part1='2'

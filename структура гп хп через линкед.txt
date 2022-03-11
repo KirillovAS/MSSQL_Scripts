@@ -1,0 +1,61 @@
+--exec gp
+CREATE proc [dbo].[_structura_gp]
+    @nmode int=0
+    ,@table_name_result varchar(500)=''
+    ,@ckiguid varchar(50)=''
+    ,@gp varchar(2)='21'
+  
+    
+as
+begin
+declare @sel varchar(max)
+--declare @temp_result VARCHAR(max)='_temp_table_1'
+set nocount on
+
+--create table #temp_result
+--(cs_code varchar(10))
+
+
+
+--declare @sel varchar(max),@gp varchar(2)
+--set @gp='21'
+set @sel='select * into temp_structura_gp from openquery(MINEK,''select top 10 * from _structura_gp where left(cs_code,2)='''''+@gp+''''' '')'
+--select @sel
+exec(@sel)
+select * into #temp_result
+from temp_structura_gp
+drop table temp_structura_gp
+--select * from _temp_table_1
+--drop table _temp_table_1
+--select @sel
+--exec(@sel)
+--insert into #temp_result
+--exec(@sel)
+
+--select * into #temp_result from openquery(MINEK,'select top 10 * from _structura_gp where left(cs_code,2)=''21'' ')
+--select * from #temp_result
+--select @sel='select top 100 * from _structura_gp'
+
+--select *
+--into #temp_result
+--from openquery(MINEK, 'exec(''+@sel+'')')
+
+--insert into #temp_result
+--exec(@sel) at MINEK
+
+
+
+if @table_name_result <> ''
+
+begin
+    exec ('select * into ' + @table_name_result + ' from [#temp_result]')
+    --select * from [#temp_result]
+end
+else
+begin
+    select * from [#temp_result]
+end
+
+
+
+end
