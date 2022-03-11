@@ -1,0 +1,506 @@
+CREATE  proc [ks_ddlcontrol].[_2020_OBAS_perenos_v_rro_grid]
+-- Данные сажаются в РРО только на первую версию,
+-- если документ с такой шапкой в РРО есть, то данные добавляются в него (не заменяются)
+-- если данная комбинация рп+подраздел есть в документе, то по ней суммы не обновляются
+
+as
+begin
+	set nocount on
+declare 
+@period_god int,
+@ver_id int
+
+set @period_god=2021
+set @ver_id=1
+
+--01. ФОТ лиц, замещающих государственные должности
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4728 as podr_id,
+t1.cl_4729 as cs_id,
+t1.cl_4730 as vr_id,
+t1.cl_4731 as kosgu_id,
+t1.cl_4732 as dop_id,
+t1.cl_4733 as reg_id,
+t1.cl_4734 as if_id,
+t1.cl_4735 as tip_ro_id,
+t1.cl_4736 as rp_id,
+t1.at_4690 as summa
+into #obas_fot_1
+from ks_ddlcontrol.ds_1125_4690 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_1
+
+--02. ФОТ лиц, замещающих должности, не являющиеся должностями мун. службы
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4737 as podr_id,
+t1.cl_4738 as cs_id,
+t1.cl_4739 as vr_id,
+t1.cl_4740 as kosgu_id,
+t1.cl_4741 as dop_id,
+t1.cl_4742 as reg_id,
+t1.cl_4743 as if_id,
+t1.cl_4744 as tip_ro_id,
+t1.cl_4745 as rp_id,
+t1.at_4727 as summa
+into #obas_fot_2
+from ks_ddlcontrol.ds_1125_4709 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_2
+
+--03. ФОТ лиц, оплачиваемых по иным системам оплаты труда
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4746 as podr_id,
+t1.cl_4747 as cs_id,
+t1.cl_4748 as vr_id,
+t1.cl_4749 as kosgu_id,
+t1.cl_4750 as dop_id,
+t1.cl_4751 as reg_id,
+t1.cl_4752 as if_id,
+t1.cl_4753 as tip_ro_id,
+t1.cl_4754 as rp_id,
+t1.at_4704 as summa
+into #obas_fot_3
+from ks_ddlcontrol.ds_1125_4727 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_3
+
+--04. ФОТ Прочие выплаты
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4755 as podr_id,
+t1.cl_4756 as cs_id,
+t1.cl_4757 as vr_id,
+t1.cl_4758 as kosgu_id,
+t1.cl_4759 as dop_id,
+t1.cl_4760 as reg_id,
+t1.cl_4761 as if_id,
+t1.cl_4762 as tip_ro_id,
+t1.cl_4763 as rp_id,
+t1.at_4658 as summa
+into #obas_fot_4
+from ks_ddlcontrol.ds_1125_4750 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_4
+
+--05. ФОТ Начисления
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4764 as podr_id,
+t1.cl_4765 as cs_id,
+t1.cl_4766 as vr_id,
+t1.cl_4767 as kosgu_id,
+t1.cl_4768 as dop_id,
+t1.cl_4769 as reg_id,
+t1.cl_4770 as if_id,
+t1.cl_4771 as tip_ro_id,
+t1.cl_4772 as rp_id,
+t1.at_4655 as summa
+into #obas_fot_5
+from ks_ddlcontrol.ds_1125_4755 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_5
+
+--06. АИП
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4773 as podr_id,
+t1.cl_4775 as cs_id,
+t1.cl_4774 as vr_id,
+t1.cl_4776 as kosgu_id,
+t1.cl_4777 as dop_id,
+t1.cl_4778 as reg_id,
+t1.cl_4779 as if_id,
+t1.cl_4781 as tip_ro_id,
+t1.cl_4780 as rp_id,
+t1.at_4645 as summa
+into #obas_fot_6
+from ks_ddlcontrol.ds_1125_4763 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_6
+
+--07. ПНО
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4782 as podr_id,
+t1.cl_4784 as cs_id,
+t1.cl_4783 as vr_id,
+t1.cl_4785 as kosgu_id,
+t1.cl_4786 as dop_id,
+t1.cl_4787 as reg_id,
+t1.cl_4788 as if_id,
+t1.cl_4790 as tip_ro_id,
+t1.cl_4789 as rp_id,
+t1.at_4642 as summa
+into #obas_fot_7
+from ks_ddlcontrol.ds_1125_4771 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_7
+
+--08. Стоимость коммунальных услуг
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4791 as podr_id,
+t1.cl_4793 as cs_id,
+t1.cl_4792 as vr_id,
+t1.cl_4794 as kosgu_id,
+t1.cl_4795 as dop_id,
+t1.cl_4796 as reg_id,
+t1.cl_4797 as if_id,
+t1.cl_4799 as tip_ro_id,
+t1.cl_4798 as rp_id,
+t1.at_4649 as summa
+into #obas_fot_8
+from ks_ddlcontrol.ds_1125_4775 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_8
+
+--09. Прочие расходы
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4800 as podr_id,
+t1.cl_4802 as cs_id,
+t1.cl_4801 as vr_id,
+t1.cl_4803 as kosgu_id,
+t1.cl_4804 as dop_id,
+t1.cl_4805 as reg_id,
+t1.cl_4806 as if_id,
+t1.cl_4808 as tip_ro_id,
+t1.cl_4807 as rp_id,
+t1.at_4661 as summa
+into #obas_fot_9
+from ks_ddlcontrol.ds_1125_4781 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_9
+
+--10. Затраты на выполнение МЗ
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4809 as podr_id,
+t1.cl_4811 as cs_id,
+t1.cl_4810 as vr_id,
+t1.cl_4812 as kosgu_id,
+t1.cl_4813 as dop_id,
+t1.cl_4814 as reg_id,
+t1.cl_4815 as if_id,
+t1.cl_4817 as tip_ro_id,
+t1.cl_4816 as rp_id,
+t1.at_4666 as summa
+into #obas_fot_10
+from ks_ddlcontrol.ds_1125_4786 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_10
+
+--11.1. Закупки. Суммы
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_4818 as podr_id,
+t1.cl_4820 as cs_id,
+t1.cl_4819 as vr_id,
+t1.cl_4821 as kosgu_id,
+t1.cl_4822 as dop_id,
+t1.cl_4823 as reg_id,
+t1.cl_4824 as if_id,
+t1.cl_4826 as tip_ro_id,
+t1.cl_4825 as rp_id,
+t1.at_4670 as summa
+into #obas_fot_11
+from ks_ddlcontrol.ds_1125_4793 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_11
+
+--Сумма субсидии на МЗ (от РНЗ)
+select 
+t3.cl_4460 as period_id, 
+t4.at_2557 as period_god,
+t3.cl_4478 as obas_id, 
+t3.cl_4456 as bud_id, 
+t3.cl_4458 as ver_id, 
+t3.cl_4457 as ved_id, 
+t3.cl_4459 as kor_id, 
+t2.cl_4471 as god_id,
+t5.at_3535 as god_code,
+t1.cl_5321 as podr_id,
+t1.cl_5322 as cs_id,
+t1.cl_5323 as vr_id,
+t1.cl_5324 as kosgu_id,
+t1.cl_5325 as dop_id,
+t1.cl_5326 as reg_id,
+t1.cl_5327 as if_id,
+t1.cl_5329 as tip_ro_id,
+t1.cl_5328 as rp_id,
+t1.at_5332 as summa
+into #obas_fot_12
+from ks_ddlcontrol.ds_1125_5565 t1
+left join ks_ddlcontrol.ds_1125_4688 t2 on t1.id_up=t2.id
+left join ks_ddlcontrol.ds_1125_4682 t3 on t2.id_up=t3.id
+left join ks_ddlcontrol.cl_945_2548 t4 on t3.cl_4460=t4.id
+left join ks_ddlcontrol.cl_1057_3690 t5 on t2.cl_4471=t5.id
+--select * from #obas_fot_12
+
+
+select * 
+into #obas_sborka_1
+from #obas_fot_1
+union all 
+select * from #obas_fot_2
+union all 
+select * from #obas_fot_3
+union all 
+select * from #obas_fot_4
+union all 
+select * from #obas_fot_5
+union all 
+select * from #obas_fot_6
+union all 
+select * from #obas_fot_7
+union all 
+select * from #obas_fot_8
+union all 
+select * from #obas_fot_9
+union all 
+select * from #obas_fot_10
+union all 
+select * from #obas_fot_11
+union all 
+select * from #obas_fot_12
+
+
+--select * from #obas_sborka_1
+--return
+
+select 
+t1.*, 
+t2.at_2520  as if_name,
+case when t1.period_god=god_code and t2.at_2520='ФЕД' then summa else 0 end as summa_ochg_fed,
+case when t1.period_god+1=god_code and t2.at_2520='ФЕД' then summa else 0 end as summa_pl1_fed,
+case when t1.period_god+2=god_code and t2.at_2520='ФЕД' then summa else 0 end as summa_pl2_fed,
+case when t1.period_god=god_code and t2.at_2520='РЕГ' then summa else 0 end as summa_ochg_reg,
+case when t1.period_god+1=god_code and t2.at_2520='РЕГ' then summa else 0 end as summa_pl1_reg,
+case when t1.period_god+2=god_code and t2.at_2520='РЕГ' then summa else 0 end as summa_pl2_reg,
+case when t1.period_god=god_code and t2.at_2520='МЕСТ' then summa else 0 end as summa_ochg_mest,
+case when t1.period_god+1=god_code and t2.at_2520='МЕСТ' then summa else 0 end as summa_pl1_mest,
+case when t1.period_god+2=god_code and t2.at_2520='МЕСТ' then summa else 0 end as summa_pl2_mest,
+case when t1.period_god=god_code and t2.at_2520='ВНБ' then summa else 0 end as summa_ochg_vnb,
+case when t1.period_god+1=god_code and t2.at_2520='ВНБ' then summa else 0 end as summa_pl1_vnb,
+case when t1.period_god+2=god_code and t2.at_2520='ВНБ' then summa else 0 end as summa_pl2_vnb
+into #obas_sborka_2
+from #obas_sborka_1 t1
+left join ks_ddlcontrol.cl_940_2504 t2 on t1.if_id=t2.id
+where t1.period_god=@period_god and t1.ver_id=@ver_id
+--select * from #obas_sborka_2
+
+select 
+period_id, 
+period_god,
+bud_id, 
+ver_id, 
+ved_id, 
+podr_id,
+rp_id,
+sum(summa_ochg_fed) summa_ochg_fed,
+sum(summa_ochg_reg) summa_ochg_reg,
+sum(summa_ochg_mest) summa_ochg_mest,
+sum(summa_ochg_vnb) summa_ochg_vnb,
+sum(summa_pl1_fed) summa_pl1_fed,
+sum(summa_pl1_reg) summa_pl1_reg,
+sum(summa_pl1_mest) summa_pl1_mest,
+sum(summa_pl1_vnb) summa_pl1_vnb,
+sum(summa_pl2_fed) summa_pl2_fed,
+sum(summa_pl2_reg) summa_pl2_reg,
+sum(summa_pl2_mest) summa_pl2_mest,
+sum(summa_pl2_vnb) summa_pl2_vnb
+into #obas_sborka_3
+from #obas_sborka_2
+group by
+period_id,
+period_god,
+bud_id,
+ver_id,
+ved_id,
+podr_id,
+rp_id
+--select * from #obas_sborka_3
+
+select distinct 
+period_id, 
+period_god,
+bud_id, 
+ver_id, 
+ved_id,
+t2.id as rro_shapka_id
+into #obas_shapka
+from #obas_sborka_3 t1
+left join ks_ddlcontrol.ds_1139_5083 t2
+on t1.period_id=t2.cl_4880 and t1.bud_id=t2.cl_4836 and t1.ved_id=t2.cl_4837
+--select * from #obas_shapka
+
+insert into ks_ddlcontrol.ds_1139_5083 (documentid, cl_4880, cl_4836, cl_4837, cl_4838)
+select 
+438, 
+period_id, 
+bud_id, 
+ved_id, 
+1
+from #obas_shapka
+where rro_shapka_id is null
+
+insert into ks_ddlcontrol.ds_1139_5090 (id_up, cl_4841, cl_4842, at_4905, at_4906, at_4908, at_4909, at_4911, at_4912, at_4913, at_4914, at_4916, at_4917, at_4918, at_4919)
+select
+t2.id,
+t1.podr_id,
+t1.rp_id,
+summa_ochg_fed,
+summa_ochg_reg,
+summa_ochg_mest,
+summa_ochg_vnb,
+summa_pl1_fed,
+summa_pl1_reg,
+summa_pl1_mest,
+summa_pl1_vnb,
+summa_pl2_fed,
+summa_pl2_reg,
+summa_pl2_mest,
+summa_pl2_vnb
+from #obas_sborka_3 t1
+inner join ks_ddlcontrol.ds_1139_5083 t2
+on t1.period_id=t2.cl_4880 and t1.bud_id=t2.cl_4836 and t1.ved_id=t2.cl_4837 and t2.cl_4838=1
+left join ks_ddlcontrol.ds_1139_5090 t3
+on t2.id=t3.id_up and t1.podr_id=t3.cl_4841 and t1.rp_id=t3.cl_4842
+where t3.id is null and (
+summa_ochg_fed > 0 or
+summa_ochg_reg > 0 or
+summa_ochg_mest > 0 or
+summa_ochg_vnb > 0 or
+summa_pl1_fed > 0 or
+summa_pl1_reg > 0 or
+summa_pl1_mest > 0 or
+summa_pl1_vnb > 0 or
+summa_pl2_fed > 0 or
+summa_pl2_reg > 0 or
+summa_pl2_mest > 0 or
+summa_pl2_vnb > 0)
+end
