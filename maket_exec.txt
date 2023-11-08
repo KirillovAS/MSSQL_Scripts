@@ -1,0 +1,2 @@
+exec dbo.maket_exec @maket_code='MAKET_e76dccfc_5cf6_499e_bcc6_07104b2b2d5e',@cParams='@dDate1=''20230101'',@dDate2=''20230101'''
+exec dbo.maket_exec @maket_code='MAKET_7388e88f_ee80_4bad_848e_5b3e571ba3b9',@cParams='@dDate1=''20230101'',@dDate2=''20230101'''
